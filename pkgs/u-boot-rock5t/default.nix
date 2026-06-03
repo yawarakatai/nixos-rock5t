@@ -6,7 +6,7 @@ stdenv.mkDerivation {
 
   src = fetchurl {
     url = "https://github.com/radxa-build/rock-5t/releases/download/rsdk-r6/rock-5t_bookworm_kde_r6.output_512.img.xz";
-    hash = "sha512-ASeofy2GXPRICzrzWm/9rRXh3dEVIIRGfz/VfGS+B3tGyMGqFXu48sMxwKwsf6NZqKZNV/yQIH0zXh8TZyjT6zRoY3KsfqdG1FFQ9k5SmMhL7E7/2OvFauy41v3v5SfB2uf0rVh+YLadOF4FcUdhSFBrDD2s+28Kv3AP5FSMrf3Hj3bHXzC2S+dCHcxL7KpACn9glSjLA==";
+    hash = "sha256-W1MMh/JOD4PIodROwLCA79yn7bHGfBAPv0rcnS1YSgo=";
   };
 
   nativeBuildInputs = [ xz ];
