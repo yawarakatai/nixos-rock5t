@@ -21,11 +21,21 @@
           screen
           minicom
           tio
+          rkdeveloptool
+          usbutils
         ];
         shellHook = ''
           echo "ROCK 5T NixOS build environment"
-          echo "  Serial console: tio /dev/ttyUSB0 -b 1500000"
-          echo "  Build SD image:  nix build .#nixosConfigurations.rock5t.config.system.build.sdImage -L"
+          echo ""
+          echo "  Serial console:    tio /dev/ttyUSB0 -b 1500000"
+          echo "  Build SD image:    nix build .#nixosConfigurations.rock5t.config.system.build.sdImage -L"
+          echo ""
+          echo "  === SPI Flash Erase (Maskrom mode) ==="
+          echo "  1. Power off ROCK 5T, connect USB-C to PC"
+          echo "  2. Hold Maskrom button + power on (DC 12V)"
+          echo "  3. lsusb | grep -i rock   # verify 2207:350a"
+          echo "  4. rkdeveloptool db <spl_loader.bin>"
+          echo "  5. rkdeveloptool ef"
         '';
       };
 
