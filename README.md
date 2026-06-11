@@ -111,6 +111,12 @@ sudo rkdeveloptool db rk3588_spl_loader_v1.12.bin
 sudo rkdeveloptool ef
 ```
 
+## Acknowledgments
+
+- [ryan4yin/nixos-rk3588](https://github.com/ryan4yin/nixos-rk3588) (MIT) — base board infrastructure, GPT sd-image builder
+- [armbian/rkbin](https://github.com/armbian/rkbin) — Rockchip firmware binaries
+- [radxa-build/rock-5t](https://github.com/radxa-build/rock-5t) — official U-Boot images
+
 ## License
 
 MIT
