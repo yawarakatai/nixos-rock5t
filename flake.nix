@@ -19,17 +19,13 @@
         imports = [
           ./modules/boards/rock5t.nix
         ];
-        # Provide the path to nixos-rk3588's internal modules
-        _module.args.rk3588-modules = "${nixos-rk3588}/modules";
       };
 
       # Full SD image build config — for initial install only
       nixosConfigurations.dane = nixpkgs.lib.nixosSystem {
         system = aarch64System;
 
-        specialArgs = {
-          rk3588-modules = "${nixos-rk3588}/modules";
-        };
+        specialArgs = { inherit inputs; };
 
         modules = [
           self.nixosModules.rock5t

@@ -1,6 +1,13 @@
 # Rock 5T Board Configuration
-{ rk3588-modules, lib, ... }:
+{ inputs, lib, ... }:
 
+let
+  nixos-rk3588' =
+    if inputs ? nixos-rock5t
+    then inputs.nixos-rock5t.inputs.nixos-rk3588
+    else inputs.nixos-rk3588;
+  rk3588-modules = "${nixos-rk3588'}/modules";
+in
 {
   imports = [
     "${rk3588-modules}/boards/base.nix"

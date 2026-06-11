@@ -1,7 +1,12 @@
 # Rock 5T SD Image Configuration
-{ lib, config, pkgs, rk3588-modules, ... }:
+{ inputs, lib, config, pkgs, ... }:
 
 let
+  nixos-rk3588' =
+    if inputs ? nixos-rock5t
+    then inputs.nixos-rock5t.inputs.nixos-rk3588
+    else inputs.nixos-rk3588;
+  rk3588-modules = "${nixos-rk3588'}/modules";
   rootPartitionUUID = "14e19a7b-0ae0-484d-9d54-43bd6fdc20c7";
   uboot = pkgs.callPackage ../../pkgs/u-boot-rock5t { };
 in
