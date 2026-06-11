@@ -13,8 +13,9 @@ in
   boot = {
     kernelParams = [
       "rootwait"
-      "fsck.mode=skip"
     ];
+
+    initrd.systemd.enable = lib.mkForce false;
 
     loader = {
       grub.enable = lib.mkForce false;
