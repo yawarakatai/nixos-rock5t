@@ -35,12 +35,15 @@ in
     compressImage = true;
 
     firmwarePartitionOffset = 32;
-    populateFirmwareCommands = "";
+    firmwareSize = 256;  # Enough for kernel + initrd + dtb
 
-    populateRootCommands = ''
-      mkdir -p ./files/boot
-      ${config.boot.loader.generic-extlinux-compatible.populateCmd} -c ${config.system.build.toplevel} -d ./files/boot
+    populateFirmwareCommands = ''
+      mkdir -p firmware/boot
+      ${config.boot.loader.generic-extlinux-compatible.populateCmd} \
+        -c ${config.system.build.toplevel} -d firmware/boot
     '';
+
+    populateRootCommands = "";
 
     # Rockchip boot layout:
     #   sector 64   (0x40)   - idbloader.img (SPL + DDR init)
