@@ -15,7 +15,7 @@ in
       "rootwait"
     ];
 
-    initrd.systemd.enable = lib.mkForce false;
+    initrd.checkJournalingFS = lib.mkForce false;
 
     loader = {
       grub.enable = lib.mkForce false;

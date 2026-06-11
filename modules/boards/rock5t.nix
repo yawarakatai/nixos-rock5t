@@ -12,13 +12,13 @@
       "rw"
       "earlycon"
       "consoleblank=0"
-      "console=ttyS2,1500000n8"
       "coherent_pool=2M"
       "irqchip.gicv3_pseudo_nmi=0"
       "cgroup_enable=cpuset"
       "cgroup_memory=1"
       "cgroup_enable=memory"
       "swapaccount=1"
+      "console=ttyS2,1500000n8"
     ];
   };
 
