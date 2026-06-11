@@ -52,10 +52,6 @@ The dual RTL8125B 2.5GbE NICs may show `PCIe-0 Link Fail` in U-Boot. This is har
 
 The sd-image builder may produce an ext4 filesystem slightly larger than its GPT partition. If the root mount fails with a superblock/device size mismatch, this flake includes a post-build workaround (`truncate -s +8M` + `sfdisk -N2`).
 
-### Blue LED heartbeat
-
-A double-blink repeating pattern on the blue LED indicates the kernel is running. This is normal.
-
 ## Architecture
 
 ```
@@ -70,7 +66,7 @@ nixos-rock5t/
 
 ## Acknowledgments
 
-- [ryan4yin/nixos-rk3588](https://github.com/ryan4yin/nixos-rk3588) (MIT) — board infrastructure, GPT sd-image builder
+- [ryan4yin/nixos-rk3588](https://github.com/ryan4yin/nixos-rk3588) — board infrastructure, GPT sd-image builder
 - [armbian/rkbin](https://github.com/armbian/rkbin) — Rockchip firmware
 - [radxa-build/rock-5t](https://github.com/radxa-build/rock-5t) — official U-Boot images
 
