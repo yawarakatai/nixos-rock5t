@@ -14,6 +14,34 @@
       aarch64System = "aarch64-linux";
     in
     {
+      # Board config module — import this in nix-config
+      nixosModules.rock5t = {
+        imports = [
+          ./modules/boards/rock5t.nix
+        ];
+        # Provide the path to nixos-rk3588's internal modules
+        _module.args.rk3588-modules = "${nixos-rk3588}/modules";
+      };
+
+      # Full SD image build config — for initial install only
+      nixosConfigurations.rock5t = nixpkgs.lib.nixosSystem {
+        system = aarch64System;
+
+        specialArgs = {
+          rk3588-modules = "${nixos-rk3588}/modules";
+        };
+
+        modules = [
+          self.nixosModules.rock5t
+          ./modules/sd-image/rock5t.nix
+          ./configuration.nix
+          {
+            networking.hostName = "dane";
+            sdImage.imageBaseName = "dane-sd-image";
+          }
+        ];
+      };
+
       devShells.${system}.default = pkgs.mkShell {
         buildInputs = with pkgs; [
           git
@@ -37,24 +65,6 @@
           echo "  4. rkdeveloptool db <spl_loader.bin>"
           echo "  5. rkdeveloptool ef"
         '';
-      };
-
-      nixosConfigurations.rock5t = nixpkgs.lib.nixosSystem {
-        system = aarch64System;
-
-        specialArgs = {
-          rk3588-modules = "${nixos-rk3588}/modules";
-        };
-
-        modules = [
-          ./modules/boards/rock5t.nix
-          ./modules/sd-image/rock5t.nix
-          ./configuration.nix
-          {
-            networking.hostName = "rock5t";
-            sdImage.imageBaseName = "rock5t-sd-image";
-          }
-        ];
       };
     };
 }
