@@ -43,8 +43,11 @@ in
     openssh.authorizedKeys.keys = [ ];
   };
 
-  # security
-  users.users.root.hashedPassword = "!";
+  users.users.root = {
+    inherit hashedPassword;
+  };
+
+  boot.initrd.systemd.emergencyAccess = true;
 
   # Podman for OCI containers
   virtualisation = {

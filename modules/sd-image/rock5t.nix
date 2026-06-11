@@ -12,8 +12,8 @@ in
 
   boot = {
     kernelParams = [
-      "root=UUID=${rootPartitionUUID}"
-      "rootfstype=ext4"
+      "rootwait"
+      "fsck.mode=skip"
     ];
 
     loader = {
