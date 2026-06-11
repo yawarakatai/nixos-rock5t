@@ -52,6 +52,9 @@ in
     postBuildCommands = ''
       dd if=${uboot}/idbloader.img of=$img seek=64 conv=notrunc
       dd if=${uboot}/u-boot.itb of=$img seek=16384 conv=notrunc
+      # Pad 8MiB so ext4 filesystem is safely smaller than partition
+      truncate -s +8M $img
+      echo ", +" | sfdisk -N2 $img --no-reread
     '';
   };
 }
