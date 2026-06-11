@@ -29,7 +29,7 @@ in
   services.openssh = {
     enable = true;
     settings = {
-      PasswordAuthentication = false;
+      PasswordAuthentication = true;
       PermitRootLogin = "prohibit-password";
     };
     openFirewall = true;
@@ -62,6 +62,20 @@ in
   networking = {
     firewall.enable = true;
     useDHCP = lib.mkDefault true;
+  };
+
+  # Print network status to serial console after boot
+  systemd.services.show-ip = {
+    description = "Show IP addresses on ttyS2";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "network-online.target" ];
+    serviceConfig.Type = "oneshot";
+    script = ''
+      sleep 5  # Wait for DHCP / link negotiation
+      echo "=== Network Status ===" > /dev/ttyS2
+      ip -4 addr show | grep -v '127.0.0.1\|lo:' > /dev/ttyS2
+      echo "=== Done ===" > /dev/ttyS2
+    '';
   };
 
   system.stateVersion = "24.05";
