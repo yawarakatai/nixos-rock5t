@@ -24,7 +24,7 @@
       };
 
       # Full SD image build config — for initial install only
-      nixosConfigurations.rock5t = nixpkgs.lib.nixosSystem {
+      nixosConfigurations.dane = nixpkgs.lib.nixosSystem {
         system = aarch64System;
 
         specialArgs = {
@@ -53,17 +53,10 @@
           usbutils
         ];
         shellHook = ''
-          echo "ROCK 5T NixOS build environment"
+          echo "  nixos-rock5t devshell"
           echo ""
-          echo "  Serial console:    tio /dev/ttyUSB0 -b 1500000"
-          echo "  Build SD image:    nix build .#nixosConfigurations.rock5t.config.system.build.sdImage -L"
-          echo ""
-          echo "  === SPI Flash Erase (Maskrom mode) ==="
-          echo "  1. Power off ROCK 5T, connect USB-C to PC"
-          echo "  2. Hold Maskrom button + power on (DC 12V)"
-          echo "  3. lsusb | grep -i rock   # verify 2207:350a"
-          echo "  4. rkdeveloptool db <spl_loader.bin>"
-          echo "  5. rkdeveloptool ef"
+          echo "  Build SD image:  nix build .#nixosConfigurations.dane.config.system.build.sdImage -L"
+          echo "  Serial console:  tio /dev/ttyUSB0 -b 1500000"
         '';
       };
     };

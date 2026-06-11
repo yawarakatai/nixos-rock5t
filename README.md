@@ -1,58 +1,116 @@
+# nixos-rock5t
 
-NixOSデスクトップ環境を使用して、ROCK 5T向けのU-Boot + NixOSイメージをクロスコンパイル（エミュレーションビルド）し、インストールする手順をご案内します。
+NixOS SD card image builder for the [Radxa ROCK 5T](https://docs.radxa.com/en/rock5/rock5t) single-board computer (RK3588).
 
-RK3588プラットフォームにおけるNixOSの構築は、コミュニティで実績のあるFlakeリポジトリ（ryan4yin/nixos-rk3588など）をベースにするのが最も近道です。
-1. NixOSデスクトップ（ビルドホスト）の準備
+## Overview
 
-x86_64のNixOSデスクトップでARM64向けのイメージをビルドするためには、QEMUを通じたbinfmtエミュレーションを利用するのが最も簡単で確実です。クロスコンパイラ特有のパッケージ依存関係のエラーを回避できます。
+This flake produces a bootable NixOS SD card image for the ROCK 5T. It is meant to be imported into a personal [nix-config](https://github.com/yawarakatai/nix-config) flake for runtime configuration and remote deployment.
 
-デスクトップの configuration.nix に以下を追加して、システムを再構築（nixos-rebuild switch）してください。
-Nix
+### What this flake provides
 
-boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
+| Output | Description |
+|---|---|
+| `nixosModules.rock5t` | Board config module (device tree, kernel params, base settings). Import this in your nix-config. |
+| `nixosConfigurations.dane` | Full SD image build target for initial installation. |
+| `devShells.x86_64-linux.default` | Build environment with serial tools and `rkdeveloptool`. |
 
-2. Flakeプロジェクトの構築と設定
+### What this flake does NOT contain
 
-作業用ディレクトリを作成し、NixOSのビルド構成ファイル（flake.nix 等）を準備します。コミュニティの資産を活用し、ベンダーカーネル（Armbianベースなど）とU-Bootを組み合わせた構成を作ります。  
+- Personal user configuration (users, SSH keys, passwords)
+- Home-manager settings
+- Tailscale, monitoring, or other service config
 
-構築の際の重要な設定ポイントは以下の通りです：
+These belong in your nix-config.
 
-    カーネルパラメータの指定: シリアルコンソールに出力を強制するため、構成ファイル内の boot.kernelParams に console=ttyS2,1500000n8 と earlycon を必ず含めます。
+## Architecture
 
-    デバイスツリーの指定: rockchip/rk3588-rock-5t.dtb を指定します。なお、ROCK 5Tのデュアル2.5GbE（RTL8125B）を認識させるためにはPCIeリセットGPIOのパッチ（reset-gpios）をオーバーレイとして当てる必要がある点に注意してください。  
+```
+nixos-rock5t/
+├── flake.nix                         # Entry point
+├── pkgs/u-boot-rock5t/               # U-Boot extracted from Radxa official image
+├── modules/
+│   ├── boards/rock5t.nix             # Board spec: dtb, kernel params
+│   └── sd-image/rock5t.nix           # SD image layout: GPT, extlinux, U-Boot offsets
+└── configuration.nix                 # Minimal example config
+```
 
-    ファームウェアの統合: U-BootとLinuxカーネルのハードウェア初期化のために、Rockchipの各種ファームウェア（RKNPU用など）や専用のDDR初期化バイナリ（rk3588_spl_loader）を含める記述を行います。
+### Dependencies
 
-3. SDカードイメージのビルド
+- [ryan4yin/nixos-rk3588](https://github.com/ryan4yin/nixos-rk3588) — base board infrastructure (initrd modules, GPT sd-image builder)
+- [nixpkgs](https://github.com/NixOS/nixpkgs) (nixos-unstable) — mainline kernel 6.x with native `rk3588-rock-5t.dtb`
 
-Flakeの設定が完了したら、以下のコマンドを実行してインストール用のイメージ（SDカードまたはeMMC用）をビルドします（ターゲット名はFlakeの構成に合わせて変更してください）。
-Bash
+## Usage
 
-nix build.#nixosConfigurations.rock5t.config.system.build.sdImage -L
+### Build SD card image
 
-binfmtを利用したカーネルビルドには時間がかかる場合があります。ビルドが成功すると、result/sd-image/ ディレクトリ直下に .img ファイルが生成されます。
-4. インストールメディアへの書き込み
+```bash
+nix build .#nixosConfigurations.dane.config.system.build.sdImage -L
+# Output: result/sd-image/dane-sd-image-*.img.zst
+```
 
-生成されたイメージファイルを、SDカードまたはeMMCに書き込みます。
-Bash
+### Write to SD card
 
-# /dev/sdX は実際のメディアのデバイス名に置き換えてください
-sudo dd if=result/sd-image/nixos-image-xxx-aarch64-linux.img of=/dev/sdX bs=4M status=progress oflag=sync
+```bash
+zstd -d -c result/sd-image/dane-sd-image-*.img.zst | \
+  sudo dd of=/dev/sdX bs=4M status=progress oflag=sync
+```
 
-U-Bootの構成によってはブートローダーの残骸を避けるため、SDカードに書き込む前に dd if=/dev/zero でメディアの先頭部分をゼロクリアしておくことも推奨されます。  
+### First boot
 
-(補足) 以前にEDK2をSPIフラッシュに書き込んでいる場合、設定が競合して起動に失敗する可能性があります。ROCK 5TのMaskromボタンを押しながらPCに接続してMaskromモードで起動し、rkdeveloptool コマンドを使用してSPIフラッシュを消去しておくことをお勧めします。  
-5. 起動とシリアルコンソールからの接続
+ROCK 5T boots from SD card via U-Boot:
+1. Insert SD card, connect DC 12V power
+2. UART2 serial console: `tio /dev/ttyUSB0 -b 1500000` (pins 6=GND, 8=TX, 10=RX on the 40-pin GPIO header)
+3. The system boots to a login prompt
 
-    書き込み済みのSDカード（またはeMMC）をROCK 5Tに挿入します。
+### Remote deployment (via nix-config)
 
-    UARTピン（TX, RX, GND）にUSB-TTLシリアルアダプタを接続します。ROCK 5TなどのRockchipボードは 1,500,000 bps (1.5 Mbps) のボーレートを要求するため、CH340やCP2104などの高速通信に対応したチップを搭載したアダプタを使用してください。  
+After initial install, deploy updates remotely from your nix-config:
 
-    ホストPC側でシリアルターミナルを開きます。
-    Bash
+```bash
+nixos-rebuild switch --flake ~/nix-config#dane --target-host rk@<ip> --use-remote-sudo
+```
 
-    sudo screen /dev/ttyUSB0 1500000
+## Integration with nix-config
 
-    ROCK 5Tの電源を入れます。ターミナルにU-Bootの起動ログが表示され、続いてNixOSのLinuxカーネルの起動ログ、最終的にログインプロンプトが表示されれば成功です。
+```nix
+# In your nix-config flake.nix:
+inputs.nixos-rock5t.url = "github:yawarakatai/nixos-rock5t";
+inputs.nixos-rock5t.inputs.nixpkgs.follows = "nixpkgs";
 
-ヘッドレスサーバーとして運用されるとのことですので、シリアルコンソール経由で初期パスワードの設定やIPアドレスの確認を行い、以降はSSH経由で運用を引き継ぐことができます。
+# In your nixosConfigurations:
+dane = mkHost "dane" profiles.server {
+  system = "aarch64-linux";
+  extraModules = [ inputs.nixos-rock5t.nixosModules.rock5t ];
+};
+```
+
+## Serial console
+
+| Parameter | Value |
+|---|---|
+| Interface | UART2 on 40-pin GPIO header |
+| Pins | 6 (GND), 8 (TX), 10 (RX) |
+| Baud rate | 1,500,000 |
+| Data bits | 8 |
+| Stop bits | 1 |
+| Parity | None |
+
+**Important:** Use a CP2102 or FT232R USB-TTL adapter. CH340 adapters often cannot reliably produce 1.5 Mbps.
+
+## SPI Flash erase (if needed)
+
+If the board previously had UEFI/EDK2 installed on SPI NOR flash, it must be erased:
+
+```bash
+nix develop
+# 1. Connect USB-C to ROCK 5T, hold Maskrom button, power on
+# 2. Verify: lsusb | grep -i rock
+# 3. Load DDR init:
+sudo rkdeveloptool db rk3588_spl_loader_v1.12.bin
+# 4. Erase:
+sudo rkdeveloptool ef
+```
+
+## License
+
+MIT
