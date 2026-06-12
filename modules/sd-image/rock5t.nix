@@ -41,7 +41,7 @@ in
     compressImage = true;
 
     firmwarePartitionOffset = 32;
-    firmwareSize = 256;  # Enough for kernel + initrd + dtb
+    firmwareSize = 1024;  # 1GB for kernels + initrds across multiple generations
 
     populateFirmwareCommands = ''
       mkdir -p firmware/boot
